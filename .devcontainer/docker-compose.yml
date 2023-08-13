@@ -1,0 +1,79 @@
+version: '3'
+services:
+  mariadb:
+    image: bitnami/mariadb
+    ports:
+      - "3306:3306"
+    environment:
+      - MARIADB_USER=bn_moodle
+      - MARIADB_PASSWORD=foobar1111
+      - MARIADB_ROOT_PASSWORD=foobar1111
+      - MARIADB_DATABASE=bitnami_moodle
+    volumes:
+      - ./downloads/mariadb:/bitnami/mariadb
+    networks:
+      default:
+        aliases:
+          - my-api.dev
+  moodle:
+    image: bitnami/moodle:latest
+    environment:
+      - BITNAMI_DEBUG=true
+      - MOODLE_DATABASE_HOST=mariadb
+      - MOODLE_DATABASE_PORT_NUMBER=3306
+      - MOODLE_DATABASE_USER=bn_moodle
+      - MOODLE_DATABASE_NAME=bitnami_moodle
+      - MOODLE_DATABASE_PASSWORD=foobar1111
+      - MOODLE_DATABASE_ROOT_PASSWORD=foobar1111
+      - MOODLE_SITE_NAME=Moodle skyvar
+      - MOODLE_USERNAME=foobar_user
+      - MOODLE_PASSWORD=foobar1111
+      - NODE_APP_URL=localhost
+      - MOODLE_EMAIL=miriamr@skyvar
+    volumes:
+      - ./downloads/moodle:/bitnami/moodle
+      - ./downloads/moodledata:/bitnami/moodledata
+    ports:
+      - 80:8080
+      - 443:8443
+    extra_hosts:
+      - "host.docker.internal:host-gateway"  
+    depends_on:
+      - mariadb
+      - api
+    networks:
+      default:
+        aliases:
+          - my-api.dev
+  
+  api:
+    build:
+      context: .
+    ports:
+      - 3000:3000
+    volumes:
+      - .:/var/www
+      # - C:\MiriRotenshtein\moodle\1\server\get.js:/app
+    networks:
+      default:
+        aliases:
+          - my-api.dev
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    ports:
+      - '8080:80'
+    environment:
+      PMA_HOST: mariadb
+      PMA_PORT: 3306      
+    depends_on:
+      - mariadb 
+    networks:
+      default:
+        aliases:
+          - my-api.dev
+volumes:
+  mariadb_data:
+  moodle_data:
+  moodledata_data:
